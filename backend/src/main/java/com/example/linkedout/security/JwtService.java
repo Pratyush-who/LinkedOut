@@ -1,6 +1,6 @@
 package com.example.linkedout.security;
 
-import com.example.linkedout.model.User;
+import com.example.linkedout.user.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +9,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -46,7 +50,7 @@ public class JwtService {
     public String generateAccessToken(User user) {
         return Jwts.builder()
                 .subject(user.getId())
-                .claim("handle", user.getHandle())
+                .claim("username", user.getUsername())
                 .id(UUID.randomUUID().toString())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + (expiration * 1000)))
@@ -88,8 +92,8 @@ public class JwtService {
     }
 
     private PrivateKey loadPrivateKey(Resource resource) throws Exception {
-        try (InputStream is = resource.getInputStream()) {
-            String keyStr = new String(is.readAllBytes())
+        try (InputStream is = openKeyStream(resource)) {
+            String keyStr = new String(is.readAllBytes(), StandardCharsets.US_ASCII)
                     .replace("-----BEGIN PRIVATE KEY-----", "")
                     .replace("-----END PRIVATE KEY-----", "")
                     .replaceAll("\\s+", "");
@@ -101,8 +105,8 @@ public class JwtService {
     }
 
     private PublicKey loadPublicKey(Resource resource) throws Exception {
-        try (InputStream is = resource.getInputStream()) {
-            String keyStr = new String(is.readAllBytes())
+        try (InputStream is = openKeyStream(resource)) {
+            String keyStr = new String(is.readAllBytes(), StandardCharsets.US_ASCII)
                     .replace("-----BEGIN PUBLIC KEY-----", "")
                     .replace("-----END PUBLIC KEY-----", "")
                     .replaceAll("\\s+", "");
@@ -111,5 +115,30 @@ public class JwtService {
             KeyFactory kf = KeyFactory.getInstance("RSA");
             return kf.generatePublic(spec);
         }
+    }
+
+    /**
+     * Development launchers sometimes use a nested source directory as the
+     * working directory. Resolve the ignored project-level certs directory by
+     * walking upwards, while keeping an explicitly configured existing resource
+     * (for example, a production secret mount) authoritative.
+     */
+    private InputStream openKeyStream(Resource configuredResource) throws IOException {
+        if (configuredResource.exists()) {
+            return configuredResource.getInputStream();
+        }
+
+        String fileName = configuredResource.getFilename();
+        boolean isDevelopmentCertPath = configuredResource.getDescription().contains("file:certs/");
+        if (isDevelopmentCertPath && fileName != null) {
+            for (Path directory = Path.of("").toAbsolutePath(); directory != null; directory = directory.getParent()) {
+                Path candidate = directory.resolve("certs").resolve(fileName);
+                if (Files.isRegularFile(candidate)) {
+                    return Files.newInputStream(candidate);
+                }
+            }
+        }
+
+        return configuredResource.getInputStream();
     }
 }

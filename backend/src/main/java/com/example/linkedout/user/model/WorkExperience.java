@@ -1,4 +1,4 @@
-package com.example.linkedout.model;
+package com.example.linkedout.user.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
