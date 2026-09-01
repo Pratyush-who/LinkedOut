@@ -33,108 +33,65 @@ public class PriceAlgorithms {
 
     @PostConstruct
     public void init() {
-        // Algo 1: Geometric Brownian Motion (Standard Stock Model)
-        // Uses current price, asset growth factor (drift), and asset volatility.
-        algos.add((asset, trend) -> {
-            double drift = asset.getGrowthFactor().doubleValue() - 1.0; 
-            // Adjust drift slightly based on market trend
-            drift += trend * trendMultiplier;
-            
-            double vol = asset.getVolatility().doubleValue();
-            if (vol <= 0) vol = baseVolatility; // Baseline vol
-
-            double currentPrice = asset.getCurrentPrice().doubleValue();
-            
-            // GBM Formula: dS = S * (mu * dt + sigma * dW)
-            double dt = timeStep;
-            double dW = random.nextGaussian() * Math.sqrt(dt);
-            
-            double delta = currentPrice * (drift * dt + vol * dW);
-            return applyLimits(currentPrice + delta, asset.getInitialPrice());
-        });
-
-        // Algo 2: Ornstein-Uhlenbeck (Mean-Reverting)
-        // Tends to pull the price back towards a target mean (initial price * growth factor)
+        // We will use a unified, highly realistic algorithm that combines:
+        // 1. A drifting target mean (based on growthFactor).
+        // 2. Mean reversion (Ornstein-Uhlenbeck) to make it swing around the target (e.g. 100 -> 200 -> 150).
+        // 3. Random walk (Geometric Brownian Motion) for local noise.
+        // 4. A hidden sine wave factor to make it harder to decode.
+        
         algos.add((asset, trend) -> {
             double currentPrice = asset.getCurrentPrice().doubleValue();
             double initialPrice = asset.getInitialPrice().doubleValue();
             
-            // The target price grows over time based on the growth factor
-            double targetMean = initialPrice * asset.getGrowthFactor().doubleValue();
-            targetMean += targetMean * trend * (trendMultiplier / 2.0); // Market trend shifts the mean temporarily
+            // 1. Time-based target drift
+            // In a real scenario, this would be based on actual time elapsed.
+            // We simulate time elapsed by using the created/updated difference or just a simple step counter.
+            // For simulation purposes, we'll assume the target grows by 'growthFactor' over a set period (e.g., 100,000 ticks).
+            // A growthFactor of 1.10 means 10% growth.
+            double growthRate = asset.getGrowthFactor().doubleValue() - 1.0; 
             
-            double theta = 0.5; // Speed of reversion
-            double vol = asset.getVolatility().doubleValue();
-            if (vol <= 0) vol = baseVolatility * 1.5;
+            // We need a pseudo-random but somewhat deterministic target based on time.
+            // To simulate the 100 -> 200 -> 150 -> 250 effect, the "target" itself oscillates while growing.
+            long now = System.currentTimeMillis();
+            // A slow cycle (e.g., 1 hour = 3600000 ms)
+            double cycle = (now % 3600000) / 3600000.0 * Math.PI * 2; 
+            
+            // The target mean price
+            // It grows linearly (simplified), but oscillates by up to 20% to create macro-swings
+            double macroOscillation = Math.sin(cycle) * 0.20; 
+            
+            // Add a little bit of the global market trend
+            double trendImpact = trend * trendMultiplier;
+            
+            // This is roughly where the asset "wants" to be right now.
+            // In a real app we'd track age, but here we just let it drift from current price + growth.
+            // Since we don't have perfect age tracking per tick in this loop, we'll apply drift continuously.
+            double targetDrift = (growthRate * timeStep) + (macroOscillation * timeStep) + (trendImpact * timeStep);
+            
+            double targetMean = currentPrice * (1.0 + targetDrift);
 
+            // 2. Mean Reversion (pulling price towards targetMean)
+            double theta = 0.05; // Speed of reversion. Lower = wider swings before returning.
+            
+            // 3. Noise (Volatility)
+            double vol = asset.getVolatility().doubleValue();
+            if (vol <= 0) vol = baseVolatility;
+            
+            // We scale volatility so it's realistic for a 2-second tick (timeStep).
             double dt = timeStep;
             double dW = random.nextGaussian() * Math.sqrt(dt);
             
-            // OU Formula: dS = theta * (mean - S) * dt + sigma * dW
+            // OU Formula + GBM drift: dS = theta * (target - S) * dt + sigma * S * dW
             double delta = theta * (targetMean - currentPrice) * dt + vol * currentPrice * dW;
-            return applyLimits(currentPrice + delta, asset.getInitialPrice());
-        });
-
-        // Algo 3: Momentum / Trend Following
-        // Relies heavily on the global market trend rather than individual drift
-        algos.add((asset, trend) -> {
-            double currentPrice = asset.getCurrentPrice().doubleValue();
-            double vol = asset.getVolatility().doubleValue();
-            if (vol <= 0) vol = baseVolatility * 2.0;
-
-            double dt = timeStep;
-            // High reliance on trend
-            double drift = trend * (trendMultiplier * 20.0); 
-            // Add a localized momentum factor based on its growth factor
-            drift += (asset.getGrowthFactor().doubleValue() - 1.0) * 0.5;
-
-            double dW = random.nextGaussian() * Math.sqrt(dt);
-            double delta = currentPrice * (drift * dt + vol * dW);
             
-            return applyLimits(currentPrice + delta, asset.getInitialPrice());
-        });
-
-        // Algo 4: Jump-Diffusion Model (Merton's Model)
-        // Similar to GBM but with rare, sudden price jumps (good for highly volatile assets)
-        algos.add((asset, trend) -> {
-            double currentPrice = asset.getCurrentPrice().doubleValue();
-            double drift = asset.getGrowthFactor().doubleValue() - 1.0 + (trend * (trendMultiplier / 2.0));
-            double vol = asset.getVolatility().doubleValue();
-            if (vol <= 0) vol = baseVolatility * 2.5;
-
-            double dt = timeStep;
-            double dW = random.nextGaussian() * Math.sqrt(dt);
+            // 4. Hidden pseudo-random factor to prevent decoding
+            // Uses the asset ID hash mixed with time
+            int secretSeed = asset.getId().hashCode() ^ (int)(now / 10000);
+            Random secretRandom = new Random(secretSeed);
+            double noise = (secretRandom.nextDouble() - 0.5) * vol * 0.1;
             
-            // Continuous part
-            double delta = currentPrice * (drift * dt + vol * dW);
-            
-            // Jump part (Poisson process)
-            double lambda = 5.0; // expected jumps per year
-            if (random.nextDouble() < (lambda * dt)) {
-                // A jump occurred! Size is log-normally distributed, but we simplify
-                double jumpSize = (random.nextGaussian() * 0.1) + (trend * 0.05);
-                delta += currentPrice * jumpSize;
-            }
+            delta += noise;
 
-            return applyLimits(currentPrice + delta, asset.getInitialPrice());
-        });
-
-        // Algo 5: Stable Growth (Blue-chip style)
-        // Very low volatility, strict adherence to growth factor. Rarely deviates far.
-        algos.add((asset, trend) -> {
-            double currentPrice = asset.getCurrentPrice().doubleValue();
-            double drift = asset.getGrowthFactor().doubleValue() - 1.0;
-            // Market trend has minimized effect
-            drift += trend * (trendMultiplier * 0.2);
-            
-            // Force low volatility
-            double vol = Math.min(asset.getVolatility().doubleValue(), baseVolatility / 2.0);
-            if (vol <= 0) vol = baseVolatility / 5.0;
-
-            double dt = timeStep;
-            double dW = random.nextGaussian() * Math.sqrt(dt);
-            
-            double delta = currentPrice * (drift * dt + vol * dW);
             return applyLimits(currentPrice + delta, asset.getInitialPrice());
         });
     }

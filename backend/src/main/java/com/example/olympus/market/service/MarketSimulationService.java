@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,6 +21,7 @@ public class MarketSimulationService {
 
     private final AssetRepository assetRepository;
     private final PriceAlgorithms priceAlgorithms;
+    private final SimpMessagingTemplate messagingTemplate;
     private final Random random = new Random();
 
     // Global market trend value, fluctuates between -1.0 and 1.0 (normally)
@@ -57,6 +59,10 @@ public class MarketSimulationService {
         }
 
         assetRepository.saveAll(activeAssets);
+        
+        // Broadcast the updated assets via WebSockets
+        messagingTemplate.convertAndSend("/topic/prices", activeAssets);
+        
         log.debug("Market simulated for {} assets. Current Trend: {}", activeAssets.size(), currentMarketTrend);
     }
 
