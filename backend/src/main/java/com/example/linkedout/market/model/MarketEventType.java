@@ -1,3 +1,0 @@
-package com.example.linkedout.market.model;
-
-public enum MarketEventType { SUPPLY_SHORTAGE, NEW_PARTNERSHIP, REGULATORY_SHOCK, PRODUCT_SUCCESS, PRODUCT_FAILURE, MEME_TREND, GLOBAL_RECESSION, MARKET_BOOM }
