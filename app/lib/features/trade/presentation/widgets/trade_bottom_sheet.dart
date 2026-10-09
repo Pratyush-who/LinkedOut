@@ -174,10 +174,11 @@ class _TradeBottomSheetState extends State<TradeBottomSheet> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(top: BorderSide(color: Color(0xFF262C3A), width: 1.5)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               // Drag handle
               Center(
                 child: Container(
@@ -386,7 +387,8 @@ class _TradeBottomSheetState extends State<TradeBottomSheet> {
               ),
             ],
           ),
-        );
+        ),
+      );
       },
     );
   }

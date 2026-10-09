@@ -59,27 +59,38 @@ class _OnboardingPageState extends State<OnboardingPage> {
           _photoSelected = !_photoSelected;
         });
       },
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.white,
-          border: Border.all(color: AppColors.black, width: 1.2),
+          color: AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _photoSelected ? AppColors.primaryLight : const Color(0xFF2E3646),
+            width: 1.2,
+          ),
         ),
         child: Row(
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 54,
+              height: 54,
               decoration: BoxDecoration(
-                color: _photoSelected ? AppColors.greenLight : AppColors.offWhite,
+                color: _photoSelected
+                    ? AppColors.primary.withOpacity(0.2)
+                    : AppColors.surfaceElevated,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.black, width: 1.2),
+                border: Border.all(
+                  color: _photoSelected ? AppColors.primaryLight : const Color(0xFF2E3646),
+                  width: 1.5,
+                ),
               ),
               alignment: Alignment.center,
               child: Icon(
                 _photoSelected ? Icons.check_rounded : Icons.add_a_photo_outlined,
-                color: AppColors.black,
+                color: _photoSelected ? AppColors.primaryLight : AppColors.grey400,
+                size: 24,
               ),
             ),
             const SizedBox(width: 14),
@@ -88,19 +99,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Profile avatar',
-                    style: GoogleFonts.inter(
+                    'Profile Avatar',
+                    style: GoogleFonts.sora(
                       fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.black,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'Personalize your trading presence.',
+                    _photoSelected ? 'Default avatar selected' : 'Tap to customize avatar',
                     style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppColors.grey,
+                      fontSize: 12,
+                      color: AppColors.grey400,
                     ),
                   ),
                 ],
@@ -129,12 +140,30 @@ class _OnboardingPageState extends State<OnboardingPage> {
       },
       builder: (context, authState) {
         return Scaffold(
-          backgroundColor: AppColors.offWhite,
+          backgroundColor: AppColors.background,
           body: Stack(
             children: [
+              // Subtle background gradient lights
               Positioned(
-                top: -100,
-                left: -70,
+                top: -80,
+                left: -60,
+                child: Container(
+                  width: 260,
+                  height: 260,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.primary.withOpacity(0.25),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -50,
+                right: -50,
                 child: Container(
                   width: 240,
                   height: 240,
@@ -142,121 +171,141 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        AppColors.primaryLight.withOpacity(0.45),
-                        AppColors.primaryLight.withOpacity(0.0),
+                        AppColors.secondary.withOpacity(0.15),
+                        Colors.transparent,
                       ],
                     ),
                   ),
                 ),
               ),
+
               SafeArea(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 560),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
-                                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight - 48,
+                            ),
+                            child: IntrinsicHeight(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // Brand Pill
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: AppColors.primaryLight,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'OLYMPUS ONBOARDING',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 2.5,
+                                          color: AppColors.primaryLight,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Text(
+                                    'Set up your Trader Profile.',
+                                    style: GoogleFonts.sora(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'Choose your unique trader handle and display name to begin trading simulation on Olympus.',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      height: 1.5,
+                                      color: AppColors.grey400,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  // Card Container
+                                  Container(
+                                    padding: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: const Color(0xFF2E3646),
+                                        width: 1.2,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.3),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 10),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        _photoCard(),
+                                        const SizedBox(height: 20),
+                                        AuthTextField(
+                                          label: 'USERNAME',
+                                          controller: _usernameController,
+                                          hint: 'e.g. crypto_bull',
+                                          icon: Icons.alternate_email_rounded,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        AuthTextField(
+                                          label: 'DISPLAY NAME',
+                                          controller: _displayNameController,
+                                          hint: 'e.g. Alex Vance',
+                                          icon: Icons.badge_outlined,
+                                        ),
+                                        const SizedBox(height: 24),
+                                        AuthBlackButton(
+                                          title: authState.isLoading
+                                              ? 'Setting up...'
+                                              : 'Complete Profile & Enter Market',
+                                          iconWidget: authState.isLoading
+                                              ? const SizedBox(
+                                                  width: 18,
+                                                  height: 18,
+                                                  child: CircularProgressIndicator(
+                                                      strokeWidth: 2, color: Colors.white),
+                                                )
+                                              : const Icon(
+                                                  Icons.arrow_forward_rounded,
+                                                  color: Colors.white,
+                                                  size: 19,
+                                                ),
+                                          onTap: authState.isLoading ? () {} : _completeProfile,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const Spacer(),
+                                ],
                               ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'OLYMPUS ONBOARDING',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 3,
-                                  color: AppColors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 32),
-                          Text(
-                            'Set up your Trader Profile.',
-                            style: GoogleFonts.sora(
-                              fontSize: 34,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.black,
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Choose a unique trader handle and your display name to begin trading on Olympus.',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              height: 1.45,
-                              color: AppColors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 28),
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: AppColors.white.withOpacity(0.95),
-                              border: Border.all(
-                                color: AppColors.black.withOpacity(0.1),
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.black.withOpacity(0.04),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 14),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _photoCard(),
-                                const SizedBox(height: 20),
-                                AuthTextField(
-                                  label: 'USERNAME',
-                                  controller: _usernameController,
-                                  hint: 'e.g. crypto_bull',
-                                  borderRadius: 0,
-                                ),
-                                const SizedBox(height: 18),
-                                AuthTextField(
-                                  label: 'DISPLAY NAME',
-                                  controller: _displayNameController,
-                                  hint: 'e.g. Alex Vance',
-                                  borderRadius: 0,
-                                ),
-                                const SizedBox(height: 24),
-                                AuthBlackButton(
-                                  title: authState.isLoading
-                                      ? 'Setting up...'
-                                      : 'Complete Profile & Trade',
-                                  iconWidget: authState.isLoading
-                                      ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                              strokeWidth: 2, color: Colors.white),
-                                        )
-                                      : const Icon(Icons.arrow_forward_rounded,
-                                          color: Colors.white, size: 20),
-                                  onTap: authState.isLoading ? () {} : _completeProfile,
-                                  borderRadius: 0,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ),

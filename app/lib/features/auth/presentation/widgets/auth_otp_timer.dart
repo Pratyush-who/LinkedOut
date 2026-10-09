@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class AuthOtpTimer extends StatelessWidget {
   final int resendSeconds;
@@ -17,14 +18,20 @@ class AuthOtpTimer extends StatelessWidget {
       alignment: Alignment.centerRight,
       child: TextButton(
         onPressed: resendSeconds == 0 ? onResend : null,
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
         child: Text(
           resendSeconds > 0
-              ? 'Resend OTP in ${resendSeconds}s'
-              : 'Resend OTP',
+              ? 'Resend code in ${resendSeconds}s'
+              : 'Resend code',
           style: GoogleFonts.inter(
             color: resendSeconds == 0
-                ? const Color(0xFFB398EB)
-                : Colors.grey.shade500,
+                ? AppColors.primaryLight
+                : AppColors.grey500,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
         ),

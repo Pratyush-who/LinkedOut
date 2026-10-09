@@ -37,50 +37,52 @@ class _ProfilePageState extends State<ProfilePage> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           border: Border(top: BorderSide(color: Color(0xFF262C3A), width: 1.5)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: AppColors.grey600, borderRadius: BorderRadius.circular(2)),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: AppColors.grey600, borderRadius: BorderRadius.circular(2)),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text('EDIT PROFILE',
-                style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 20),
-            TextField(
-              controller: nameController,
-              decoration:
-                  const InputDecoration(labelText: 'Display Name', prefixIcon: Icon(Icons.person_outline)),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: photoController,
-              decoration: const InputDecoration(
-                  labelText: 'Profile Photo URL', prefixIcon: Icon(Icons.image_outlined)),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                context.read<AuthBloc>().add(
-                      AuthUpdateProfileEvent(
-                        displayName: nameController.text.trim(),
-                        profilePhotoUrl: photoController.text.trim().isNotEmpty
-                            ? photoController.text.trim()
-                            : null,
-                      ),
-                    );
-                Navigator.pop(modalContext);
-                UiHelpers.showSnackBar(context, 'Profile updated successfully!', isSuccess: true);
-              },
-              child: const Text('Save Changes'),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text('EDIT PROFILE',
+                  style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 20),
+              TextField(
+                controller: nameController,
+                decoration:
+                    const InputDecoration(labelText: 'Display Name', prefixIcon: Icon(Icons.person_outline)),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: photoController,
+                decoration: const InputDecoration(
+                    labelText: 'Profile Photo URL', prefixIcon: Icon(Icons.image_outlined)),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<AuthBloc>().add(
+                        AuthUpdateProfileEvent(
+                          displayName: nameController.text.trim(),
+                          profilePhotoUrl: photoController.text.trim().isNotEmpty
+                              ? photoController.text.trim()
+                              : null,
+                        ),
+                      );
+                  Navigator.pop(modalContext);
+                  UiHelpers.showSnackBar(context, 'Profile updated successfully!', isSuccess: true);
+                },
+                child: const Text('Save Changes'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -106,48 +108,50 @@ class _ProfilePageState extends State<ProfilePage> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           border: Border(top: BorderSide(color: Color(0xFF262C3A), width: 1.5)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: AppColors.grey600, borderRadius: BorderRadius.circular(2)),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: AppColors.grey600, borderRadius: BorderRadius.circular(2)),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text('SERVER & API CONFIG',
-                style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 8),
-            Text(
-              'Configure the Olympus backend host URL. Default is Android emulator (10.0.2.2:8080) or localhost (127.0.0.1:8080).',
-              style: GoogleFonts.inter(fontSize: 13, color: AppColors.grey400),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: urlController,
-              decoration: const InputDecoration(
-                  labelText: 'Backend Base URL', prefixIcon: Icon(Icons.dns_outlined)),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () async {
-                final newUrl = urlController.text.trim();
-                if (newUrl.isNotEmpty) {
-                  await SecureStorageService.setBaseUrl(newUrl);
-                  AppConfig.baseUrl = newUrl;
-                  if (context.mounted) {
-                    Navigator.pop(modalContext);
-                    UiHelpers.showSnackBar(context, 'Base URL updated to $newUrl', isSuccess: true);
+              const SizedBox(height: 16),
+              Text('SERVER & API CONFIG',
+                  style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 8),
+              Text(
+                'Configure the Olympus backend host URL. Default is Android emulator (10.0.2.2:8080) or localhost (127.0.0.1:8080).',
+                style: GoogleFonts.inter(fontSize: 13, color: AppColors.grey400),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: urlController,
+                decoration: const InputDecoration(
+                    labelText: 'Backend Base URL', prefixIcon: Icon(Icons.dns_outlined)),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () async {
+                  final newUrl = urlController.text.trim();
+                  if (newUrl.isNotEmpty) {
+                    await SecureStorageService.setBaseUrl(newUrl);
+                    AppConfig.baseUrl = newUrl;
+                    if (context.mounted) {
+                      Navigator.pop(modalContext);
+                      UiHelpers.showSnackBar(context, 'Base URL updated to $newUrl', isSuccess: true);
+                    }
                   }
-                }
-              },
-              child: const Text('Apply Server URL'),
-            ),
-          ],
+                },
+                child: const Text('Apply Server URL'),
+              ),
+            ],
+          ),
         ),
       ),
     );
